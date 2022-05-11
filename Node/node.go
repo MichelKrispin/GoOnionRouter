@@ -2,12 +2,12 @@ package main
 
 import (
 	"bufio"
-	"encoding/binary"
 	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"os"
+	"encoding/binary"
 	"strings"
 )
 
@@ -40,60 +40,7 @@ func main() {
 		defer c.Close()
 
 		// If there is a connection parse the HTTP request input
-		buf := bufio.NewReader(c)
-		// Read the address size
-		addressSizeBytes := []byte{0, 0, 0, 0}
-		for i := 0; i < 4; i++ {
-			var err error
-			addressSizeBytes[i], err = buf.ReadByte()
-			if err != nil {
-				if err.Error() != "EOF" {
-					log.Fatalln(err)
-				}
-				break
-			}
-		}
-		addressSize := binary.BigEndian.Uint32(addressSizeBytes)
-
-		// Read the content size
-		contentSizeBytes := []byte{0, 0, 0, 0}
-		for i := 0; i < 4; i++ {
-			var err error
-			contentSizeBytes[i], err = buf.ReadByte()
-			if err != nil {
-				if err.Error() != "EOF" {
-					log.Fatalln(err)
-				}
-				break
-			}
-		}
-		contentSize := binary.BigEndian.Uint32(contentSizeBytes)
-
-		// Read the address
-		address := ""
-		for i := 0; i < int(addressSize); i++ {
-			b, err := buf.ReadByte()
-			if err != nil {
-				if err.Error() != "EOF" {
-					log.Fatalln(err)
-				}
-				break
-			}
-			address += string(b)
-		}
-
-		// Read the content
-		content := ""
-		for i := 0; i < int(contentSize); i++ {
-			b, err := buf.ReadByte()
-			if err != nil {
-				if err.Error() != "EOF" {
-					log.Fatalln(err)
-				}
-				break
-			}
-			content += string(b)
-		}
+		address, content := parseRequest(c)
 		log.Println("Received:\n", address, "\nand\n", content)
 
 		// After receiving the data pass it on to the next server
@@ -125,8 +72,20 @@ func main() {
 			nextConnection.Write([]byte(content))
 			log.Println("Wrote request\n" + content)
 
-			// TODO: Parse returning content again and put it into the response string
+			// Parse returning content again and put it into the response string
+    		_, response = parseRequest(c)
+    		log.Println("Received content next hop:\n", content)
 		}
+
+		// Now wrap the response up again and send it back
+		dummyAddress := "none"
+		addressBytes := make([]byte, 4)
+		binary.BigEndian.PutUint32(addressBytes[0:], uint32(len(dummyAddress)))
+
+		contentBytes := make([]byte, 4)
+		binary.BigEndian.PutUint32(contentBytes[0:], uint32(len(response)))
+
+		response = string(addressBytes) + string(contentBytes) + dummyAddress + response
 
 		// Pass the received response on
 		w := bufio.NewWriter(c)
@@ -142,7 +101,7 @@ func main() {
 		*/
 		w.WriteString(response)
 		w.Flush()
-		log.Println("Wrote response. Closing connection.")
+		log.Println("Wrote response:\n", response, "\nClosing connection.")
 		c.Close()
 	}
 }
