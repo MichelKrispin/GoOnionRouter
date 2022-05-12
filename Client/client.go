@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/json"
+	"io"
 	"log"
 	"net"
+	"net/http"
 )
 
 func checkError(err error) {
@@ -11,16 +14,17 @@ func checkError(err error) {
 	}
 }
 
-func printRoute(firstHop string, hops []string) {
-	result := "The route goes\n\t" + firstHop + " -> "
-	l := len(hops) - 1
-	for i, _ := range hops {
-		result += hops[l-i]
-		if i != l {
-			result += " -> "
-		}
+type Route struct {
+	Nodes []string
+}
+
+func getBody(resp *http.Response) string {
+	defer resp.Body.Close()
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return err.Error()
 	}
-	log.Println(result)
+	return string(body)
 }
 
 const serverRequest = ("GET / HTTP/1.1\r\n" +
@@ -29,18 +33,28 @@ const serverRequest = ("GET / HTTP/1.1\r\n" +
 func main() {
 	log.SetPrefix("[CLIENT] ")
 
-	// Create the HTTP request
-	// Address go in reverse order
-	// First hop should no be in here
-	firstAddress := "127.0.0.1:8002"
-	addresses := []string{
-		"127.0.0.1:8080", // First one is the server
-		"127.0.0.1:8001",
-		"127.0.0.1:8000",
-	}
-	request := buildRequest(serverRequest, addresses)
+	// Ask the directory node for a route
+	resp, err := http.Get("http://127.0.0.1:8888/route")
+	checkError(err)
+	body := getBody(resp)
+	var route Route
+	json.Unmarshal([]byte(body), &route)
+	route.Nodes = append(route.Nodes, "127.0.0.1:8080")
 
-	printRoute(firstAddress, addresses)
+	/*
+		// Create the HTTP request
+		// First hop should be separate
+		firstAddress := "127.0.0.1:8002"
+		addresses := []string{
+			"127.0.0.1:8000",
+			"127.0.0.1:8001",
+			"127.0.0.1:8080", // Last one is the server
+		}
+		request := buildRequest(serverRequest, addresses)
+	*/
+	firstAddress := route.Nodes[0]
+	request := buildRequest(serverRequest, route.Nodes[1:])
+	printRoute(firstAddress, route.Nodes[1:])
 
 	// Send that request into the socket
 	c, err := net.Dial("tcp", firstAddress)

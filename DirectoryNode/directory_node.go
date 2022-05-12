@@ -21,6 +21,19 @@ func main() {
 		})
 	})
 
+	router.GET("/route", func(c *gin.Context) {
+		routes, err := getRoute(nodes)
+		if err != nil {
+			c.IndentedJSON(http.StatusBadRequest, gin.H{
+				"error": err.Error(),
+			})
+		} else {
+			c.IndentedJSON(http.StatusOK, gin.H{
+				"nodes": routes,
+			})
+		}
+	})
+
 	router.POST("/register", postRegister)
 	router.POST("/receive", postReceived)
 	router.POST("/send", postSend)

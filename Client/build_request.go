@@ -6,14 +6,16 @@ import (
 
 func buildRequest(innerBody string, addresses []string) string {
 	request := innerBody
-	for _, address := range addresses {
+	l := len(addresses)
+	for i, _ := range addresses {
+		idx := l - i - 1 // Wrap from back to front
 		addressBytes := make([]byte, 4)
-		binary.BigEndian.PutUint32(addressBytes[0:], uint32(len(address)))
+		binary.BigEndian.PutUint32(addressBytes[0:], uint32(len(addresses[idx])))
 
 		contentBytes := make([]byte, 4)
 		binary.BigEndian.PutUint32(contentBytes[0:], uint32(len(request)))
 
-		request = string(addressBytes) + string(contentBytes) + address + request
+		request = string(addressBytes) + string(contentBytes) + addresses[idx] + request
 	}
 	return request
 }
