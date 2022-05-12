@@ -18,13 +18,12 @@ func checkError(err error) {
 }
 
 func main() {
-	log.SetPrefix("[Node]: ")
-
 	// Getting the port from the args or using default
 	port := "8000"
 	if len(os.Args) > 1 {
 		port = os.Args[1]
 	}
+	log.SetPrefix("[NODE:" + port + "] ")
 
 	// Listening on the given port
 	l, err := net.Listen("tcp", ":"+port)
@@ -37,7 +36,6 @@ func main() {
 	for {
 		c, err := l.Accept()
 		checkError(err)
-		defer c.Close()
 
 		// If there is a connection parse the HTTP request input
 		address, content := parseRequest(c)
@@ -47,61 +45,43 @@ func main() {
 		var response string
 		// If the content starts with a GET, then this is the last hop
 		if strings.HasPrefix(content, "GET") {
-			// Find the host
-			host := ""
-			for _, line := range strings.Split(content, "\n") {
-				if strings.HasPrefix(line, "Host: ") {
-					host = strings.Split(line, " ")[1]
-					host = host[:len(host)-1]
-					host = "http://" + host
-					break
-				}
-			}
-			req, err := http.NewRequest("GET", host, nil)
+			// This ignores completely the original HTTP request right now
+			host := "http://" + address
+			req, err := http.NewRequest("GET", host, nil) // Create request
 			checkError(err)
-
-			resp, err := http.DefaultClient.Do(req)
-			b, err := httputil.DumpResponse(resp, true)
+			resp, err := http.DefaultClient.Do(req) // Send request
+			checkError(err)
+			b, err := httputil.DumpResponse(resp, true) // Get response as string
 			checkError(err)
 			response = string(b)
 		} else { // Otherwise this is an intermediate hop
-			nextConnection, err := net.Dial("tcp", address)
+			nextConnection, err := net.Dial("tcp", address) // Dial in to next node
 			checkError(err)
-			log.Println("Connected to next server: ", address)
+			log.Println("Connected to next server at ", address)
 
-			nextConnection.Write([]byte(content))
-			log.Println("Wrote request\n" + content)
+			nextConnection.Write([]byte(content)) // Pass the content on
+			log.Println("Send request to next server\n" + content)
 
-			// Parse returning content again and put it into the response string
-			_, response = parseRequest(c)
-			log.Println("Received content next hop:\n", content, "\n----------------")
+			// Parse returning content and put it into the response string
+			_, response = parseRequest(nextConnection)
 		}
 
-		// Now wrap the response up again and send it back
-		dummyAddress := "none"
-		addressBytes := make([]byte, 4)
-		binary.BigEndian.PutUint32(addressBytes[0:], uint32(len(dummyAddress)))
+		// Wrap the response up again if it isn't already wrapped up
+		if strings.HasPrefix(response, "HTTP/") {
+			dummyAddress := "none" // Will be ignored anyway
+			addressBytes := make([]byte, 4)
+			binary.BigEndian.PutUint32(addressBytes[0:], uint32(len(dummyAddress)))
+			contentBytes := make([]byte, 4)
+			binary.BigEndian.PutUint32(contentBytes[0:], uint32(len(response)))
 
-		contentBytes := make([]byte, 4)
-		binary.BigEndian.PutUint32(contentBytes[0:], uint32(len(response)))
-
-		response = string(addressBytes) + string(contentBytes) + dummyAddress + response
+			response = string(addressBytes) + string(contentBytes) + dummyAddress + response
+		}
 
 		// Pass the received response on
 		w := bufio.NewWriter(c)
-		/*
-					w.WriteString(`HTTP/1.1 200 OK
-			Content-Type: application/json; charset=utf-8
-			Date: Wed, 11 May 2022 10:26:10 GMT
-			Content-Length: 29
-
-			{
-				\"quote\": \"Some quote\"
-			}`)
-		*/
 		w.WriteString(response)
 		w.Flush()
-		log.Println("Wrote response:\n", response, "\nClosing connection.\n----------------")
+		log.Println("Passed response back:\n", response, "\nClosing connection.\n----------------")
 		c.Close()
 	}
 }

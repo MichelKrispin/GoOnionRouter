@@ -15,19 +15,21 @@ const serverRequest = ("GET / HTTP/1.1\r\n" +
 	"Host: 127.0.0.1:8080\r\n\r\n")
 
 func main() {
-	log.SetPrefix("[Client]: ")
+	log.SetPrefix("[CLIENT] ")
 
 	// Create the HTTP request
 	// Address go in reverse order
+	// First hop should no be in here
 	addresses := []string{
+		"127.0.0.1:8080", // First one is the server
 		"127.0.0.1:8000",
-		// "127.0.0.1:8001",
+		"127.0.0.1:8001",
 	}
 
 	request := buildRequest(serverRequest, addresses)
 
 	// Send that request into the socket
-	firstAddress := "127.0.0.1:8001" // addresses[len(addresses)-1]
+	firstAddress := "127.0.0.1:8002"
 	c, err := net.Dial("tcp", firstAddress)
 	checkError(err)
 	log.Println("Connected to " + firstAddress + " socket")
