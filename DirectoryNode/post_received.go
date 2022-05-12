@@ -16,7 +16,7 @@ func postReceived(c *gin.Context) {
 		return
 	}
 
-	if isRegistered(nodes, newConnection) {
+	if !isRegistered(nodes, newConnection) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Not registered."})
 		return
 	}
