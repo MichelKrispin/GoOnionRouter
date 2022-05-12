@@ -28,7 +28,8 @@ func main() {
 	// Listening on the given port
 	l, err := net.Listen("tcp", ":"+port)
 	checkError(err)
-	log.Println("Listenting on :" + port)
+	nodesAddress := "127.0.0.1:" + port
+	notifyRegister(port)
 
 	// PROTOCOL
 	// size of address | size of content | address | content
@@ -39,31 +40,31 @@ func main() {
 
 		// If there is a connection parse the HTTP request input
 		address, content := parseRequest(c)
-		log.Println("Received:\n", address, "\nand\n", content, "\n----------------")
+		notifyReceive(c.RemoteAddr().String(), nodesAddress)
 
 		// After receiving the data pass it on to the next server
 		var response string
 		// If the content starts with a GET, then this is the last hop
 		if strings.HasPrefix(content, "GET") {
 			// This ignores completely the original HTTP request right now
-			host := "http://" + address
-			req, err := http.NewRequest("GET", host, nil) // Create request
+			resp, err := http.Get("http://" + address)
 			checkError(err)
-			resp, err := http.DefaultClient.Do(req) // Send request
-			checkError(err)
+			notifySend(nodesAddress, address)
+
 			b, err := httputil.DumpResponse(resp, true) // Get response as string
 			checkError(err)
 			response = string(b)
+			notifyReceive(address, nodesAddress)
 		} else { // Otherwise this is an intermediate hop
 			nextConnection, err := net.Dial("tcp", address) // Dial in to next node
 			checkError(err)
-			log.Println("Connected to next server at ", address)
 
 			nextConnection.Write([]byte(content)) // Pass the content on
-			log.Println("Send request to next server\n" + content)
+			notifySend(nextConnection.LocalAddr().String(), address)
 
 			// Parse returning content and put it into the response string
 			_, response = parseRequest(nextConnection)
+			notifyReceive(address, nextConnection.LocalAddr().String())
 		}
 
 		// Wrap the response up again if it isn't already wrapped up
@@ -81,7 +82,9 @@ func main() {
 		w := bufio.NewWriter(c)
 		w.WriteString(response)
 		w.Flush()
-		log.Println("Passed response back:\n", response, "\nClosing connection.\n----------------")
+
+		notifySend(nodesAddress, c.RemoteAddr().String())
+		log.Println("Passed response back and closing connection.\n-----------------------")
 		c.Close()
 	}
 }
