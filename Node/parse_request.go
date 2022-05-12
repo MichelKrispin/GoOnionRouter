@@ -48,6 +48,19 @@ func parseRequest(c net.Conn) (address string, content string) {
 		}
 		address += string(b)
 	}
+	/*
+		// TODO: Get decryption to work
+		priv_pem := readStringFromFile("private.pem")
+		priv_parsed, _ := ParseRsaPrivateKeyFromPemStr(priv_pem)
+
+		encrypted := readStringFromFile("encryptedData.txt")
+
+		decryptedBytes, err := priv_parsed.Decrypt(nil, []byte(encrypted), &rsa.OAEPOptions{Hash: crypto.SHA256})
+		if err != nil {
+			panic(err)
+		}
+		string(decryptedBytes)
+	*/
 
 	// Read the content
 	for i := 0; i < int(contentSize); i++ {
