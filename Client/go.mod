@@ -1,3 +1,3 @@
-module or/client
+module onionrouter/client
 
 go 1.16

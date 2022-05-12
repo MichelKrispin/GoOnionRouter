@@ -1,4 +1,4 @@
-module or/server
+module onionrouter/server
 
 go 1.16
 
