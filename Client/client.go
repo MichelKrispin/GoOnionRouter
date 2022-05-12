@@ -1,11 +1,8 @@
 package main
 
 import (
-	"bufio"
 	"log"
 	"net"
-	"strconv"
-	"strings"
 )
 
 func checkError(err error) {
@@ -21,54 +18,62 @@ func main() {
 	log.SetPrefix("[Client]: ")
 
 	// Create the HTTP request
-	addresses := []string{"127.0.0.1:8000"}
+	// Address go in reverse order
+	addresses := []string{
+		"127.0.0.1:8000",
+		// "127.0.0.1:8001",
+	}
+
 	request := buildRequest(serverRequest, addresses)
 
 	// Send that request into the socket
-	c, err := net.Dial("tcp", addresses[0])
+	firstAddress := "127.0.0.1:8001" // addresses[len(addresses)-1]
+	c, err := net.Dial("tcp", firstAddress)
 	checkError(err)
-	log.Println("Connected to 127.0.0.1:8080 socket")
+	log.Println("Connected to " + firstAddress + " socket")
 
 	c.Write([]byte(request))
 	log.Println("Wrote request\n" + request)
 
-	// time.Sleep(time.Second)
 	// Read the return
-	buf := bufio.NewReader(c)
-	response := ""
-	byteCounter := 0
-	foundLength := false
-	contentLength := 0
-	contentLengthStr := ""
-	foundBody := false
-	for {
-		b, err := buf.ReadByte()
-		if err != nil {
-			if err.Error() != "EOF" {
-				log.Fatalln(err)
-			}
-			break
-		}
-		if !foundLength && strings.Contains(response, "Content-Length: ") {
-			if b == '\r' {
-				foundLength = true
-				contentLength, err = strconv.Atoi(contentLengthStr)
-				checkError(err)
-			} else {
-				contentLengthStr += string(b)
-			}
-		} else if !foundBody && strings.Contains(response, "\r\n\r\n") {
-			foundBody = true
-		}
-		response += string(b)
-		if foundBody {
-			if byteCounter >= contentLength-1 {
-				c.Close()
+	_, response := parseRequest(c)
+	/*
+		buf := bufio.NewReader(c)
+		response := ""
+		byteCounter := 0
+		foundLength := false
+		contentLength := 0
+		contentLengthStr := ""
+		foundBody := false
+		for {
+			b, err := buf.ReadByte()
+			if err != nil {
+				if err.Error() != "EOF" {
+					log.Fatalln(err)
+				}
 				break
 			}
-			byteCounter++
+			if !foundLength && strings.Contains(response, "Content-Length: ") {
+				if b == '\r' {
+					foundLength = true
+					contentLength, err = strconv.Atoi(contentLengthStr)
+					checkError(err)
+				} else {
+					contentLengthStr += string(b)
+				}
+			} else if !foundBody && strings.Contains(response, "\r\n\r\n") {
+				foundBody = true
+			}
+			response += string(b)
+			if foundBody {
+				if byteCounter >= contentLength-1 {
+					c.Close()
+					break
+				}
+				byteCounter++
+			}
 		}
-	}
+	*/
 
 	log.Println("Received:\n", response)
 }

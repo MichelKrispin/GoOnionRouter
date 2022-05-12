@@ -2,12 +2,12 @@ package main
 
 import (
 	"bufio"
+	"encoding/binary"
 	"log"
 	"net"
 	"net/http"
 	"net/http/httputil"
 	"os"
-	"encoding/binary"
 	"strings"
 )
 
@@ -41,7 +41,7 @@ func main() {
 
 		// If there is a connection parse the HTTP request input
 		address, content := parseRequest(c)
-		log.Println("Received:\n", address, "\nand\n", content)
+		log.Println("Received:\n", address, "\nand\n", content, "\n----------------")
 
 		// After receiving the data pass it on to the next server
 		var response string
@@ -73,8 +73,8 @@ func main() {
 			log.Println("Wrote request\n" + content)
 
 			// Parse returning content again and put it into the response string
-    		_, response = parseRequest(c)
-    		log.Println("Received content next hop:\n", content)
+			_, response = parseRequest(c)
+			log.Println("Received content next hop:\n", content, "\n----------------")
 		}
 
 		// Now wrap the response up again and send it back
@@ -101,7 +101,7 @@ func main() {
 		*/
 		w.WriteString(response)
 		w.Flush()
-		log.Println("Wrote response:\n", response, "\nClosing connection.")
+		log.Println("Wrote response:\n", response, "\nClosing connection.\n----------------")
 		c.Close()
 	}
 }
