@@ -54,7 +54,12 @@ func main() {
 		"127.0.0.1:8002",
 		"127.0.0.1:8080", // Last one is the server
 	}
-	request := buildRequest(serverRequest, addresses)
+	keys := []string{
+		"keys/public_8000.pem",
+		"keys/public_8001.pem",
+		"keys/public_8002.pem",
+	}
+	request := buildRequest(serverRequest, addresses, keys)
 	printRoute(firstAddress, addresses[1:])
 
 	// Send that request into the socket

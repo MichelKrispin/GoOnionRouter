@@ -37,6 +37,19 @@ func parseRequest(c net.Conn) (address string, content string) {
 	}
 	contentSize := binary.BigEndian.Uint32(contentSizeBytes)
 
+	// Read the encrypted key
+	encryptedKey := make([]byte, 512)
+	for i := 0; i < 512; i++ {
+		var err error
+		encryptedKey[i], err = buf.ReadByte()
+		if err != nil {
+			if err.Error() != "EOF" {
+				log.Fatalln(err)
+			}
+			break
+		}
+	}
+
 	// Read the address
 	for i := 0; i < int(addressSize); i++ {
 		b, err := buf.ReadByte()

@@ -39,7 +39,7 @@ func main() {
 		checkError(err)
 
 		// If there is a connection parse the HTTP request input
-		address, content := parseRequest(c, port)
+		address, content := parseRequest(c, port) // port)
 		notifyReceive(c.RemoteAddr().String(), nodesAddress)
 
 		// After receiving the data pass it on to the next server

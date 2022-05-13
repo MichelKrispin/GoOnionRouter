@@ -69,7 +69,7 @@ func parseRequest(c net.Conn, port string) (address string, content string) {
 	}
 
 	// Read the content
-	encryptedContent := ""
+	encryptedContentBytes := make([]byte, int(contentSize))
 	for i := 0; i < int(contentSize); i++ {
 		b, err := buf.ReadByte()
 		if err != nil {
@@ -78,8 +78,10 @@ func parseRequest(c net.Conn, port string) (address string, content string) {
 			}
 			break
 		}
-		encryptedContent += string(b)
+		// encryptedContent += string(b)
+		encryptedContentBytes[i] = b
 	}
+	encryptedContent := string(encryptedContentBytes)
 
 	// Decrypt (if port is not empty)
 	if port != "" {
@@ -92,9 +94,13 @@ func parseRequest(c net.Conn, port string) (address string, content string) {
 			panic(err)
 		}
 		key := string(decryptedKeyBytes)
+		log.Print("Found key \"", key, "\"\n")
 
-		address = decryptAES(encryptedAddress, key)
-		content = decryptAES(encryptedContent, key)
+		//address = decryptAES(encryptedAddress, key)
+		//content = decryptAES(encryptedContent, key)
+
+		address = encryptedAddress
+		content = encryptedContent
 	} else {
 		address = encryptedAddress
 		content = encryptedContent
