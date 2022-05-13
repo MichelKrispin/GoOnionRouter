@@ -13,7 +13,6 @@ func buildRequest(innerBody string, r route) (string, []string) {
 	// Wrap from back to front
 	for idx := l - 1; idx > 0; idx-- {
 		// Get the public keys from the directory
-		// pub_pem := readStringFromFile(publicKeys[idx])
 		pub_pem := r.Nodes[idx-1].PublicKey
 		pub_parsed, err := ParseRsaPublicKeyFromPemStr(pub_pem)
 		if err != nil {
