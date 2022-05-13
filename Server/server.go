@@ -10,7 +10,7 @@ func main() {
 	router := gin.Default()
 	router.GET("/", func(c *gin.Context) {
 		c.IndentedJSON(http.StatusOK, gin.H{
-			"quote": "Some quote",
+			"quote": getRandomQuote(),
 		})
 	})
 
