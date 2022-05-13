@@ -19,25 +19,20 @@ func buildRequest(innerBody string, addresses []string, keys []string) string {
 		}
 
 		// Encrypt
-		key := "HZJYmrSFCyOzwopuVuPwhQVuCnnErtuc"
+		// key := "HZJYmrSFCyOzwopuVuPwhQVuCnnErtuc"
+
+		encryptedAddress, key := encryptAES(addresses[idx], "")
+		encryptedRequest, _ := encryptAES(request, key)
+
 		encryptedKey := []byte(encryptMessage(key, pub_parsed))
-		/*
-			key := ""
-			encryptedAddress, key := encryptAES(addresses[idx], "")
-			encryptedRequest := ""
-			encryptedRequest, _ = encryptAES(request, key)
-		*/
 
 		addressBytes := make([]byte, 4)
-		// binary.BigEndian.PutUint32(addressBytes[0:], uint32(len(encryptedAddress)))
-		binary.BigEndian.PutUint32(addressBytes[0:], uint32(len(addresses[idx])))
+		binary.BigEndian.PutUint32(addressBytes[0:], uint32(len(encryptedAddress)))
 
 		contentBytes := make([]byte, 4)
-		// binary.BigEndian.PutUint32(contentBytes[0:], uint32(len(encryptedRequest)))
-		binary.BigEndian.PutUint32(contentBytes[0:], uint32(len(request)))
+		binary.BigEndian.PutUint32(contentBytes[0:], uint32(len(encryptedRequest)))
 		request = string(addressBytes) + string(contentBytes) + string(encryptedKey) +
-			addresses[idx] + request
-		//encryptedAddress + encryptedRequest
+			encryptedAddress + encryptedRequest
 	}
 	return request
 }

@@ -56,7 +56,7 @@ func parseRequest(c net.Conn, port string) (address string, content string) {
 	}
 
 	// Read the address
-	encryptedAddress := ""
+	encryptedAddressBytes := make([]byte, int(addressSize))
 	for i := 0; i < int(addressSize); i++ {
 		b, err := buf.ReadByte()
 		if err != nil {
@@ -65,8 +65,9 @@ func parseRequest(c net.Conn, port string) (address string, content string) {
 			}
 			break
 		}
-		encryptedAddress += string(b)
+		encryptedAddressBytes[i] = b
 	}
+	encryptedAddress := string(encryptedAddressBytes)
 
 	// Read the content
 	encryptedContentBytes := make([]byte, int(contentSize))
@@ -88,7 +89,6 @@ func parseRequest(c net.Conn, port string) (address string, content string) {
 		priv_pem := readStringFromFile("keys/private_" + port + ".pem")
 		priv_parsed, _ := ParseRsaPrivateKeyFromPemStr(priv_pem)
 
-		// TODO: This cannot be decrypted!!!
 		decryptedKeyBytes, err := priv_parsed.Decrypt(nil, encryptedKey, &rsa.OAEPOptions{Hash: crypto.SHA256})
 		if err != nil {
 			panic(err)
@@ -96,11 +96,8 @@ func parseRequest(c net.Conn, port string) (address string, content string) {
 		key := string(decryptedKeyBytes)
 		log.Print("Found key \"", key, "\"\n")
 
-		//address = decryptAES(encryptedAddress, key)
-		//content = decryptAES(encryptedContent, key)
-
-		address = encryptedAddress
-		content = encryptedContent
+		address = decryptAES(encryptedAddress, key)
+		content = decryptAES(encryptedContent, key)
 	} else {
 		address = encryptedAddress
 		content = encryptedContent
