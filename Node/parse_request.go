@@ -44,7 +44,7 @@ func parseRequest(c net.Conn, port string) (address string, content string) {
 
 	// Read the encrypted key
 	encryptedKey := make([]byte, 512)
-	for i := 0; i < 4; i++ {
+	for i := 0; i < 512; i++ {
 		var err error
 		encryptedKey[i], err = buf.ReadByte()
 		if err != nil {

@@ -48,9 +48,9 @@ func main() {
 
 	// Create the HTTP request
 	// First hop should be separate
-	firstAddress := "127.0.0.1:8001"
+	firstAddress := "127.0.0.1:8000"
 	addresses := []string{
-		"127.0.0.1:8000",
+		"127.0.0.1:8001",
 		"127.0.0.1:8002",
 		"127.0.0.1:8080", // Last one is the server
 	}
