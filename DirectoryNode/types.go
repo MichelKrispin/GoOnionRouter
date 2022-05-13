@@ -8,6 +8,7 @@ type connection struct {
 	Time time.Time `json:"time"`
 }
 
-type register struct {
-	Address string `json:"address"`
+type node struct {
+	Address   string `json:"address"`
+	PublicKey string `json:"publickey"`
 }

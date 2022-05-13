@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io"
 	"log"
 	"net/http"
@@ -16,11 +17,26 @@ func getBody(resp *http.Response) string {
 	return string(body)
 }
 
+type Register struct {
+	Address   string `json:"address"`
+	PublicKey string `json:"publickey"`
+}
+
 func notifyRegister(thisNodesPort string) {
+	publicKey := readStringFromFile("keys/public_" + thisNodesPort + ".pem")
+	jsonRegister := Register{
+		"127.0.0.1:" + thisNodesPort,
+		publicKey,
+	}
+	jsonString, err := json.Marshal(jsonRegister)
+	if err != nil {
+		panic(nil)
+	}
+
 	resp, err := http.Post(
 		"http://127.0.0.1:8888/register",
 		"application/json",
-		strings.NewReader("{\"address\": \"127.0.0.1:"+thisNodesPort+"\"}"),
+		strings.NewReader(string(jsonString)),
 	)
 	if err != nil {
 		log.Println("Sending error:", err)

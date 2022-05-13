@@ -4,25 +4,26 @@ import (
 	"encoding/binary"
 )
 
-func buildRequest(innerBody string, addresses []string, publicKeys []string) (string, []string) {
-	keys := make([]string, len(addresses))
+func buildRequest(innerBody string, r route) (string, []string) {
+	keys := make([]string, len(r.Nodes)-1)
 
 	request := innerBody
-	l := len(addresses)
-	for i := range addresses {
-		idx := l - i - 1 // Wrap from back to front
+	l := len(r.Nodes)
 
+	// Wrap from back to front
+	for idx := l - 1; idx > 0; idx-- {
 		// Get the public keys from the directory
-		pub_pem := readStringFromFile(publicKeys[idx])
+		// pub_pem := readStringFromFile(publicKeys[idx])
+		pub_pem := r.Nodes[idx-1].PublicKey
 		pub_parsed, err := ParseRsaPublicKeyFromPemStr(pub_pem)
 		if err != nil {
 			panic(err)
 		}
 
 		// Encrypt
-		encryptedAddress, key := encryptAES(addresses[idx], "")
+		encryptedAddress, key := encryptAES(r.Nodes[idx].Address, "")
 		encryptedRequest, _ := encryptAES(request, key)
-		keys[idx] = key
+		keys[idx-1] = key
 
 		encryptedKey := []byte(encryptMessage(key, pub_parsed))
 

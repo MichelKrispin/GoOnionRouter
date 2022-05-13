@@ -8,19 +8,19 @@ import (
 )
 
 func postRegister(c *gin.Context) {
-	var newAddress register
-	if err := c.BindJSON(&newAddress); err != nil {
+	var newNode node
+	if err := c.BindJSON(&newNode); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	if nodesContain(nodes, newAddress.Address) {
+	if nodesContain(nodes, newNode.Address) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Already registered."})
 		return
 	}
 
-	nodes = append(nodes, newAddress.Address)
+	nodes = append(nodes, newNode)
 	fmt.Println("Registered nodes:", nodes)
 
-	c.IndentedJSON(http.StatusCreated, newAddress)
+	c.IndentedJSON(http.StatusCreated, newNode)
 }

@@ -2,11 +2,11 @@ package main
 
 import "log"
 
-func printRoute(firstHop string, hops []string) {
-	result := "The route is\n\t[" + firstHop + "] -> "
-	for i, hop := range hops {
-		result += "[" + hop + "]"
-		if i != len(hops)-1 {
+func printRoute(hops route) {
+	result := "The route is\n\t"
+	for i, hop := range hops.Nodes {
+		result += "[" + hop.Address + "]"
+		if i != len(hops.Nodes)-1 {
 			result += " -> "
 		}
 	}

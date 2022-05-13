@@ -1,17 +1,17 @@
 package main
 
-func nodesContain(nodes []string, newNode string) bool {
+func nodesContain(nodes []node, newNode string) bool {
 	for _, node := range nodes {
-		if node == newNode {
+		if node.Address == newNode {
 			return true
 		}
 	}
 	return false
 }
 
-func isRegistered(nodes []string, newConnection connection) bool {
+func isRegistered(nodes []node, newConnection connection) bool {
 	for _, node := range nodes {
-		if node == newConnection.From || node == newConnection.To {
+		if node.Address == newConnection.From || node.Address == newConnection.To {
 			return true
 		}
 	}

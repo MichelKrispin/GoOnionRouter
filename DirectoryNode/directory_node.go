@@ -7,7 +7,7 @@ import (
 )
 
 // All nodes
-var nodes []string
+var nodes []node
 var connectionsReceived []connection
 var connectionsSend []connection
 

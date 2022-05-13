@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"io"
 	"log"
 	"net"
@@ -13,8 +14,13 @@ func checkError(err error) {
 	}
 }
 
-type Route struct {
-	Nodes []string
+type node struct {
+	Address   string `json:"address"`
+	PublicKey string `json:"publickey"`
+}
+
+type route struct {
+	Nodes []node `json:"nodes"`
 }
 
 func getBody(resp *http.Response) string {
@@ -33,39 +39,20 @@ func main() {
 	log.SetPrefix("[CLIENT] ")
 
 	// Ask the directory node for a route
-	/*resp, err := http.Get("http://127.0.0.1:8888/route")
+	resp, err := http.Get("http://127.0.0.1:8888/route")
 	checkError(err)
 	body := getBody(resp)
-	var route Route
-	json.Unmarshal([]byte(body), &route)
-	route.Nodes = append(route.Nodes, "127.0.0.1:8080")
+	var nodeRoute route
+	json.Unmarshal([]byte(body), &nodeRoute)
+	nodeRoute.Nodes = append(nodeRoute.Nodes, node{"127.0.0.1:8080", ""})
 
-
-	firstAddress := route.Nodes[0]
-	request := buildRequest(serverRequest, route.Nodes[1:])
-	printRoute(firstAddress, route.Nodes[1:])
-	*/
-
-	// Create the HTTP request
-	// First hop should be separate
-	firstAddress := "127.0.0.1:8000"
-	addresses := []string{
-		"127.0.0.1:8001",
-		"127.0.0.1:8002",
-		"127.0.0.1:8080", // Last one is the server
-	}
-	publicKeys := []string{
-		"keys/public_8000.pem",
-		"keys/public_8001.pem",
-		"keys/public_8002.pem",
-	}
-	request, keys := buildRequest(serverRequest, addresses, publicKeys)
-	printRoute(firstAddress, addresses[1:])
+	request, keys := buildRequest(serverRequest, nodeRoute)
+	printRoute(nodeRoute)
 
 	// Send that request into the socket
-	c, err := net.Dial("tcp", firstAddress)
+	c, err := net.Dial("tcp", nodeRoute.Nodes[0].Address)
 	checkError(err)
-	log.Println("Connected to " + firstAddress + " socket")
+	log.Println("Connected to " + nodeRoute.Nodes[0].Address + " socket")
 
 	c.Write([]byte(request))
 
