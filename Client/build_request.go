@@ -6,9 +6,6 @@ import (
 
 func buildRequest(innerBody string, addresses []string, publicKeys []string) (string, []string) {
 	keys := make([]string, len(addresses))
-	// keys[0] = "hUFHodcVSIhdhlbUwMAsWvufvELjBIec"
-	// keys[1] = "BHUMoHQtScWrtjFNNMxbUnNxlaHdQtyQ"
-	// keys[2] = "cWknRXFBnkHWWGmzREKTweGtVGEBhHwV"
 
 	request := innerBody
 	l := len(addresses)
@@ -23,9 +20,7 @@ func buildRequest(innerBody string, addresses []string, publicKeys []string) (st
 		}
 
 		// Encrypt
-		// key := keys[idx]
 		encryptedAddress, key := encryptAES(addresses[idx], "")
-		// encryptedAddress, _ := encryptAES(addresses[idx], key)
 		encryptedRequest, _ := encryptAES(request, key)
 		keys[idx] = key
 

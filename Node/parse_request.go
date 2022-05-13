@@ -79,7 +79,6 @@ func parseRequest(c net.Conn, port string) (address string, content string, key 
 			}
 			break
 		}
-		// encryptedContent += string(b)
 		encryptedContentBytes[i] = b
 	}
 	encryptedContent := string(encryptedContentBytes)
@@ -94,7 +93,7 @@ func parseRequest(c net.Conn, port string) (address string, content string, key 
 			panic(err)
 		}
 		key = string(decryptedKeyBytes)
-		log.Print("Found key \"", key, "\"\n")
+		log.Print("Decrypted key \"", key, "\"\n")
 
 		address = decryptAES(encryptedAddress, key)
 		content = decryptAES(encryptedContent, key)

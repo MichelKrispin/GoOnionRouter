@@ -75,7 +75,7 @@ func main() {
 		w.Flush()
 
 		notifySend(nodesAddress, c.RemoteAddr().String())
-		log.Println("Passed response back and closing connection.\n-----------------------")
+		log.Println("Passed response on. Closing connection.\n-----------------------")
 		c.Close()
 	}
 }
