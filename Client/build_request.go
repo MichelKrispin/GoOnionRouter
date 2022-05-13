@@ -19,8 +19,6 @@ func buildRequest(innerBody string, addresses []string, keys []string) string {
 		}
 
 		// Encrypt
-		// key := "HZJYmrSFCyOzwopuVuPwhQVuCnnErtuc"
-
 		encryptedAddress, key := encryptAES(addresses[idx], "")
 		encryptedRequest, _ := encryptAES(request, key)
 
