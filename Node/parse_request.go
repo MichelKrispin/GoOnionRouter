@@ -2,12 +2,17 @@ package main
 
 import (
 	"bufio"
+	"crypto"
+	"crypto/rsa"
 	"encoding/binary"
 	"log"
 	"net"
 )
 
-func parseRequest(c net.Conn) (address string, content string) {
+// PROTOCOL
+// size of address | size of content | Encrypted 256 AES key | address | content
+// 	   4 bytes     |    4 bytes	     \   512 byes            |   ...   \  ...
+func parseRequest(c net.Conn, port string) (address string, content string) {
 	buf := bufio.NewReader(c)
 	// Read the address size
 	addressSizeBytes := []byte{0, 0, 0, 0}
@@ -37,7 +42,21 @@ func parseRequest(c net.Conn) (address string, content string) {
 	}
 	contentSize := binary.BigEndian.Uint32(contentSizeBytes)
 
+	// Read the encrypted key
+	encryptedKey := make([]byte, 512)
+	for i := 0; i < 4; i++ {
+		var err error
+		encryptedKey[i], err = buf.ReadByte()
+		if err != nil {
+			if err.Error() != "EOF" {
+				log.Fatalln(err)
+			}
+			break
+		}
+	}
+
 	// Read the address
+	encryptedAddress := ""
 	for i := 0; i < int(addressSize); i++ {
 		b, err := buf.ReadByte()
 		if err != nil {
@@ -46,23 +65,11 @@ func parseRequest(c net.Conn) (address string, content string) {
 			}
 			break
 		}
-		address += string(b)
+		encryptedAddress += string(b)
 	}
-	/*
-		// TODO: Get decryption to work
-		priv_pem := readStringFromFile("private.pem")
-		priv_parsed, _ := ParseRsaPrivateKeyFromPemStr(priv_pem)
-
-		encrypted := readStringFromFile("encryptedData.txt")
-
-		decryptedBytes, err := priv_parsed.Decrypt(nil, []byte(encrypted), &rsa.OAEPOptions{Hash: crypto.SHA256})
-		if err != nil {
-			panic(err)
-		}
-		string(decryptedBytes)
-	*/
 
 	// Read the content
+	encryptedContent := ""
 	for i := 0; i < int(contentSize); i++ {
 		b, err := buf.ReadByte()
 		if err != nil {
@@ -71,7 +78,27 @@ func parseRequest(c net.Conn) (address string, content string) {
 			}
 			break
 		}
-		content += string(b)
+		encryptedContent += string(b)
 	}
+
+	// Decrypt (if port is not empty)
+	if port != "" {
+		priv_pem := readStringFromFile("keys/private_" + port + ".pem")
+		priv_parsed, _ := ParseRsaPrivateKeyFromPemStr(priv_pem)
+
+		// TODO: This cannot be decrypted!!!
+		decryptedKeyBytes, err := priv_parsed.Decrypt(nil, encryptedKey, &rsa.OAEPOptions{Hash: crypto.SHA256})
+		if err != nil {
+			panic(err)
+		}
+		key := string(decryptedKeyBytes)
+
+		address = decryptAES(encryptedAddress, key)
+		content = decryptAES(encryptedContent, key)
+	} else {
+		address = encryptedAddress
+		content = encryptedContent
+	}
+
 	return address, content
 }

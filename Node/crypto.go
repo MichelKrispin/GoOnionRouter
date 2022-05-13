@@ -1,18 +1,24 @@
 package main
 
 import (
-	"crypto/rand"
+	"crypto/aes"
+	"crypto/cipher"
+	cryptorand "crypto/rand"
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"fmt"
+	"io"
 	"io/ioutil"
+	"math/rand"
 	"os"
+	"time"
 )
 
 func GenerateRsaKeyPair() (*rsa.PrivateKey, *rsa.PublicKey) {
-	privkey, _ := rsa.GenerateKey(rand.Reader, 4096)
+	privkey, _ := rsa.GenerateKey(cryptorand.Reader, 4096)
 	return privkey, &privkey.PublicKey
 }
 
@@ -116,7 +122,7 @@ func generateAndSaveRsaKeyPair(suffix string) {
 func encryptMessage(msg string, publicKey *rsa.PublicKey) string {
 	encryptedBytes, err := rsa.EncryptOAEP(
 		sha256.New(),
-		rand.Reader,
+		cryptorand.Reader,
 		publicKey,
 		[]byte(msg),
 		nil)
@@ -124,4 +130,58 @@ func encryptMessage(msg string, publicKey *rsa.PublicKey) string {
 		panic(err)
 	}
 	return string(encryptedBytes)
+}
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+
+func random256Key() string {
+	rand.Seed(time.Now().UnixNano())
+	b := make([]rune, 32)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
+}
+
+func encryptAES(message string, key string) (string, string) {
+	if key == "" {
+		key = random256Key()
+	}
+	c, err := aes.NewCipher([]byte(key))
+	if err != nil {
+		panic(err)
+	}
+	gcm, err := cipher.NewGCM(c)
+	if err != nil {
+		panic(err)
+	}
+	nonce := make([]byte, gcm.NonceSize())
+	if _, err = io.ReadFull(cryptorand.Reader, nonce); err != nil {
+		fmt.Println(err)
+	}
+	return string(gcm.Seal(nonce, nonce, []byte(message), nil)), key
+}
+
+func decryptAES(encryptedMessage string, key string) string {
+	c, err := aes.NewCipher([]byte(key))
+	if err != nil {
+		panic(err)
+	}
+
+	gcm, err := cipher.NewGCM(c)
+	if err != nil {
+		panic(err)
+	}
+
+	nonceSize := gcm.NonceSize()
+	if len(encryptedMessage) < nonceSize {
+		panic(err)
+	}
+
+	nonce, ciphertext := encryptedMessage[:nonceSize], encryptedMessage[nonceSize:]
+	message, err := gcm.Open(nil, []byte(nonce), []byte(ciphertext), nil)
+	if err != nil {
+		panic(err)
+	}
+	return string(message)
 }

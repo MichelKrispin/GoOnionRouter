@@ -32,14 +32,14 @@ func main() {
 	notifyRegister(port)
 
 	// PROTOCOL
-	// size of address | size of content | address | content
-	// 	   4 bytes     |    4 bytes	     \   ...   \  ...
+	// size of address | size of content | Encrypted 256 AES key | address | content
+	// 	   4 bytes     |    4 bytes	     \   512 byes            |   ...   \  ...
 	for {
 		c, err := l.Accept()
 		checkError(err)
 
 		// If there is a connection parse the HTTP request input
-		address, content := parseRequest(c)
+		address, content := parseRequest(c, port)
 		notifyReceive(c.RemoteAddr().String(), nodesAddress)
 
 		// After receiving the data pass it on to the next server
@@ -63,7 +63,7 @@ func main() {
 			notifySend(nextConnection.LocalAddr().String(), address)
 
 			// Parse returning content and put it into the response string
-			_, response = parseRequest(nextConnection)
+			_, response = parseRequest(nextConnection, "")
 			notifyReceive(address, nextConnection.LocalAddr().String())
 		}
 
@@ -74,8 +74,10 @@ func main() {
 			binary.BigEndian.PutUint32(addressBytes[0:], uint32(len(dummyAddress)))
 			contentBytes := make([]byte, 4)
 			binary.BigEndian.PutUint32(contentBytes[0:], uint32(len(response)))
+			dummyKeyBytes := make([]byte, 512)
 
-			response = string(addressBytes) + string(contentBytes) + dummyAddress + response
+			response = string(addressBytes) + string(contentBytes) + string(dummyKeyBytes) +
+				dummyAddress + response
 		}
 
 		// Pass the received response on
