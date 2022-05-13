@@ -54,12 +54,12 @@ func main() {
 		"127.0.0.1:8002",
 		"127.0.0.1:8080", // Last one is the server
 	}
-	keys := []string{
+	publicKeys := []string{
 		"keys/public_8000.pem",
 		"keys/public_8001.pem",
 		"keys/public_8002.pem",
 	}
-	request := buildRequest(serverRequest, addresses, keys)
+	request, keys := buildRequest(serverRequest, addresses, publicKeys)
 	printRoute(firstAddress, addresses[1:])
 
 	// Send that request into the socket
@@ -70,6 +70,6 @@ func main() {
 	c.Write([]byte(request))
 
 	// Read the return
-	_, response := parseRequest(c)
+	_, response := parseRequest(c, keys)
 	log.Println("Received:\n", response)
 }

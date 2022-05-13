@@ -12,7 +12,7 @@ import (
 // PROTOCOL
 // size of address | size of content | Encrypted 256 AES key | address | content
 // 	   4 bytes     |    4 bytes	     \   512 byes            |   ...   \  ...
-func parseRequest(c net.Conn, port string) (address string, content string) {
+func parseRequest(c net.Conn, port string) (address string, content string, key string) {
 	buf := bufio.NewReader(c)
 	// Read the address size
 	addressSizeBytes := []byte{0, 0, 0, 0}
@@ -93,7 +93,7 @@ func parseRequest(c net.Conn, port string) (address string, content string) {
 		if err != nil {
 			panic(err)
 		}
-		key := string(decryptedKeyBytes)
+		key = string(decryptedKeyBytes)
 		log.Print("Found key \"", key, "\"\n")
 
 		address = decryptAES(encryptedAddress, key)
@@ -103,5 +103,5 @@ func parseRequest(c net.Conn, port string) (address string, content string) {
 		content = encryptedContent
 	}
 
-	return address, content
+	return address, content, key
 }

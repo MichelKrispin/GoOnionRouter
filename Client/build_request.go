@@ -4,7 +4,11 @@ import (
 	"encoding/binary"
 )
 
-func buildRequest(innerBody string, addresses []string, keys []string) string {
+func buildRequest(innerBody string, addresses []string, publicKeys []string) (string, []string) {
+	keys := make([]string, len(addresses))
+	// keys[0] = "hUFHodcVSIhdhlbUwMAsWvufvELjBIec"
+	// keys[1] = "BHUMoHQtScWrtjFNNMxbUnNxlaHdQtyQ"
+	// keys[2] = "cWknRXFBnkHWWGmzREKTweGtVGEBhHwV"
 
 	request := innerBody
 	l := len(addresses)
@@ -12,15 +16,18 @@ func buildRequest(innerBody string, addresses []string, keys []string) string {
 		idx := l - i - 1 // Wrap from back to front
 
 		// Get the public keys from the directory
-		pub_pem := readStringFromFile(keys[idx])
+		pub_pem := readStringFromFile(publicKeys[idx])
 		pub_parsed, err := ParseRsaPublicKeyFromPemStr(pub_pem)
 		if err != nil {
 			panic(err)
 		}
 
 		// Encrypt
+		// key := keys[idx]
 		encryptedAddress, key := encryptAES(addresses[idx], "")
+		// encryptedAddress, _ := encryptAES(addresses[idx], key)
 		encryptedRequest, _ := encryptAES(request, key)
+		keys[idx] = key
 
 		encryptedKey := []byte(encryptMessage(key, pub_parsed))
 
@@ -32,5 +39,5 @@ func buildRequest(innerBody string, addresses []string, keys []string) string {
 		request = string(addressBytes) + string(contentBytes) + string(encryptedKey) +
 			encryptedAddress + encryptedRequest
 	}
-	return request
+	return request, keys
 }

@@ -7,7 +7,7 @@ import (
 	"net"
 )
 
-func parseRequest(c net.Conn) (address string, content string) {
+func parseRequest(c net.Conn, keys []string) (address string, content string) {
 	buf := bufio.NewReader(c)
 	// Read the address size
 	addressSizeBytes := []byte{0, 0, 0, 0}
@@ -51,27 +51,37 @@ func parseRequest(c net.Conn) (address string, content string) {
 	}
 
 	// Read the address
+	addressBytes := make([]byte, int(addressSize))
 	for i := 0; i < int(addressSize); i++ {
-		b, err := buf.ReadByte()
+		var err error
+		addressBytes[i], err = buf.ReadByte()
 		if err != nil {
 			if err.Error() != "EOF" {
 				log.Fatalln(err)
 			}
 			break
 		}
-		address += string(b)
 	}
+	address = string(addressBytes)
 
 	// Read the content
+	contentBytes := make([]byte, int(contentSize))
 	for i := 0; i < int(contentSize); i++ {
-		b, err := buf.ReadByte()
+		var err error
+		contentBytes[i], err = buf.ReadByte()
 		if err != nil {
 			if err.Error() != "EOF" {
 				log.Fatalln(err)
 			}
 			break
 		}
-		content += string(b)
 	}
+	content = string(contentBytes)
+
+	// Decrypt the content multiple times using the keys
+	for _, key := range keys {
+		content = decryptAES(content, key)
+	}
+
 	return address, content
 }

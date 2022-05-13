@@ -2,7 +2,6 @@ package main
 
 import (
 	"bufio"
-	"encoding/binary"
 	"log"
 	"net"
 	"net/http"
@@ -39,7 +38,7 @@ func main() {
 		checkError(err)
 
 		// If there is a connection parse the HTTP request input
-		address, content := parseRequest(c, port) // port)
+		address, content, key := parseRequest(c, port) // port)
 		notifyReceive(c.RemoteAddr().String(), nodesAddress)
 
 		// After receiving the data pass it on to the next server
@@ -63,22 +62,12 @@ func main() {
 			notifySend(nextConnection.LocalAddr().String(), address)
 
 			// Parse returning content and put it into the response string
-			_, response = parseRequest(nextConnection, "")
+			_, response, _ = parseRequest(nextConnection, "")
 			notifyReceive(address, nextConnection.LocalAddr().String())
 		}
 
-		// Wrap the response up again if it isn't already wrapped up
-		if strings.HasPrefix(response, "HTTP/") {
-			dummyAddress := "none" // Will be ignored anyway
-			addressBytes := make([]byte, 4)
-			binary.BigEndian.PutUint32(addressBytes[0:], uint32(len(dummyAddress)))
-			contentBytes := make([]byte, 4)
-			binary.BigEndian.PutUint32(contentBytes[0:], uint32(len(response)))
-			dummyKeyBytes := make([]byte, 512)
-
-			response = string(addressBytes) + string(contentBytes) + string(dummyKeyBytes) +
-				dummyAddress + response
-		}
+		// Wrap the response in and encrypt
+		response = buildResponse(response, key)
 
 		// Pass the received response on
 		w := bufio.NewWriter(c)
