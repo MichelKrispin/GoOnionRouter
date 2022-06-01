@@ -2,8 +2,7 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- <title>Onion Router Dashboard</title> -->
-    <title>Dashboard</title>
+    <title>Onion Router Dashboard</title>
     <meta name="description" content="description" />
     <meta name="author" content="author" />
     <meta name="keywords" content="keywords" />
@@ -37,30 +36,17 @@
   <body>
     <section class="section">
       <div class="container">
-        <!--<h1 class="title">Simple Onion Router Dashboard</h1>-->
-        <h1 class="title">Dashboard</h1>
+        <h1 class="title">Onion Router Dashboard</h1>
 
-        <article class="panel">
-          <div class="panel-heading">
-            <!--<strong>Connect to the service via routes</strong>-->
-            <strong>Some Text</strong>
-          </div>
-          <div>
-            <div class="columns">
-              <div class="column">
-                <div class="box">
-                  <div class="content has-text-centered">
-                    <div class="button" id="connect-to-service">Connect</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </article>
         <div class="columns">
           <div class="column">
             <article class="panel">
               <div class="panel-heading has-text-centered">Information</div>
+              <div class="box">
+                <div class="content has-text-centered">
+                  <div class="button" id="connect-to-service">Connect</div>
+                </div>
+              </div>
               <div class="block" id="dashboard">
                 <div class="loader" id="loader"></div>
               </div>
@@ -70,11 +56,12 @@
       </div>
     </section>
   </body>
+
   <script src="assets/two.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script>
-    $("#connect-to-service").click(function () {
-      console.log("Clicked");
+    $('#connect-to-service').click(function () {
+      console.log('Clicked');
       /*
       $.ajax({
         type: "GET",
