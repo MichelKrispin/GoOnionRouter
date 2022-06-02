@@ -3,7 +3,7 @@
 // =======================
 
 const createBox = (title, x, y, borderColor) => {
-  let rect = two.makeRoundedRectangle(x, y, 100, 50, 5);
+  let rect = two.makeRoundedRectangle(x, y, boxW, boxH, 5);
   rect.fill = '#FFF';
   rect.stroke = borderColor;
   rect.linewidth = 5;
@@ -26,22 +26,19 @@ const base = () => {
   createBox('Service', width * 0.5, height * 0.9, '#751CBC');
 };
 
-const directoryClientRoute = (frameCount) => {
-  base();
-};
-
-const clientDirectoryArrow = (frameCount) => {
-  if (arrowToX < directoryPos.x) {
-    arrowToX += 1;
-  } else {
-    two.bind('update', directoryClientRoute);
-  }
-  if (arrowToY > directoryPos.y) {
-    arrowToY -= 0.9;
-  }
-  arrow.remove();
-  arrow = two.makeArrow(arrowFromX, arrowFromY, arrowToX, arrowToY);
-  base();
+const makeText = (text, x, y) => {
+  let textBox = two.makeText(text, x, y, { family: fontFamily });
+  let bounding = textBox.getBoundingClientRect();
+  let rect = two.makeRectangle(
+    x,
+    y,
+    bounding.right - bounding.left,
+    bounding.bottom - bounding.top
+  );
+  rect.fill = '#FFF';
+  rect.stroke = '#FFF';
+  textBox.remove();
+  textBox = two.makeText(text, x, y, { family: fontFamily });
 };
 
 // =======================
@@ -61,6 +58,12 @@ const height = 600;
 const fontFamily = 'Helvetica';
 const clientPos = { x: width * 0.1, y: height * 0.4 };
 const directoryPos = { x: width * 0.5, y: height * 0.1 };
+const boxW = 100;
+const boxH = 50;
+const boxWhalf = boxW / 2;
+const boxHhalf = boxH / 2;
+let pause = 1000;
+const timeDiff = 1000;
 
 // =======================
 // Drawing
@@ -71,24 +74,52 @@ let two = new Two({
   height: height,
 }).appendTo(dashboard);
 
-// Initialize all shapes first
-let arrowFromX = clientPos.x;
-let arrowFromY = clientPos.y;
-let arrowToX = arrowFromX + 0.1;
-let arrowToY = arrowFromY - 0.1;
-let arrow = two.makeArrow(arrowFromX, arrowFromY, arrowToX, arrowToY);
+// Drawing
+base();
+two.update();
 
-let routeText = two.makeText(
-  '[8000] -> [8001] -> [8002]',
-  directoryPos.x,
-  directoryPos.y,
-  {
-    family: fontFamily,
-    weight: 800,
-  }
-);
-routeText.remove();
+// Draw route request
+setTimeout(function () {
+  two.clear();
+  two.makeArrow(
+    clientPos.x + boxWhalf,
+    clientPos.y - boxHhalf,
+    directoryPos.x - boxWhalf,
+    directoryPos.y + boxHhalf
+  );
+  makeText(
+    'GET /route',
+    clientPos.x + (directoryPos.x - clientPos.x) / 2,
+    clientPos.y + (directoryPos.y - clientPos.y) / 2
+  );
+  base();
+  two.update();
+}, pause);
+pause += timeDiff;
 
-// Then start with the first animation sequence
-two.bind('update', clientDirectoryArrow);
-two.play();
+// Return route
+setTimeout(function () {
+  two.clear();
+  two.makeArrow(
+    directoryPos.x - boxWhalf,
+    directoryPos.y + boxHhalf,
+    clientPos.x + boxWhalf,
+    clientPos.y - boxHhalf
+  );
+  makeText(
+    '[8000] -> [8001] -> [8002]',
+    clientPos.x + (directoryPos.x - clientPos.x) / 2,
+    clientPos.y + (directoryPos.y - clientPos.y) / 2
+  );
+  base();
+  two.update();
+}, pause);
+pause += timeDiff;
+
+// Reset
+setTimeout(function () {
+  two.clear();
+  base();
+  two.update();
+}, pause);
+pause += timeDiff;
