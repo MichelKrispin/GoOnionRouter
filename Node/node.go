@@ -39,7 +39,7 @@ func main() {
 
 		// If there is a connection parse the HTTP request input
 		address, content, key := parseRequest(c, port) // port)
-		notifyReceive(c.RemoteAddr().String(), nodesAddress)
+		notifyReceive(nodesAddress, true)
 
 		// After receiving the data pass it on to the next server
 		var response string
@@ -48,22 +48,18 @@ func main() {
 			// This ignores completely the original HTTP request right now
 			resp, err := http.Get("http://" + address)
 			checkError(err)
-			notifySend(nodesAddress, address)
 
 			b, err := httputil.DumpResponse(resp, true) // Get response as string
 			checkError(err)
 			response = string(b)
-			notifyReceive(address, nodesAddress)
 		} else { // Otherwise this is an intermediate hop
 			nextConnection, err := net.Dial("tcp", address) // Dial in to next node
 			checkError(err)
 
 			nextConnection.Write([]byte(content)) // Pass the content on
-			notifySend(nextConnection.LocalAddr().String(), address)
 
 			// Parse returning content and put it into the response string
 			_, response, _ = parseRequest(nextConnection, "")
-			notifyReceive(address, nextConnection.LocalAddr().String())
 		}
 
 		// Wrap the response in and encrypt
@@ -74,7 +70,7 @@ func main() {
 		w.WriteString(response)
 		w.Flush()
 
-		notifySend(nodesAddress, c.RemoteAddr().String())
+		notifySend(nodesAddress, true)
 		log.Println("Passed response on. Closing connection.\n-----------------------")
 		c.Close()
 	}

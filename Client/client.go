@@ -49,6 +49,8 @@ func main() {
 		c.HTML(http.StatusOK, "index.html", gin.H{})
 	})
 
+	router.GET("/favicon.ico", func(c *gin.Context) { c.File("./assets/favicon.ico") })
+
 	router.GET("/connect", func(ginC *gin.Context) {
 		// Connect using the route
 
@@ -74,9 +76,13 @@ func main() {
 		_, response := parseRequest(c, keys)
 		log.Println("Received:\n", response)
 
+		var route [3]string
+		route[0] = nodeRoute.Nodes[0].Address
+		route[1] = nodeRoute.Nodes[1].Address
+		route[2] = nodeRoute.Nodes[2].Address
 		// Return a success code
 		ginC.IndentedJSON(http.StatusOK, gin.H{
-			"success": true,
+			"route": route,
 		})
 	})
 

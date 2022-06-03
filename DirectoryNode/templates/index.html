@@ -2,7 +2,7 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Onion Router Dashboard</title>
+    <title>Directory Node</title>
     <meta name="description" content="description" />
     <meta name="author" content="author" />
     <meta name="keywords" content="keywords" />
@@ -19,7 +19,7 @@
   <body>
     <section class="section">
       <div class="container">
-        <h1 class="title">Simple Onion Router Dashboard</h1>
+        <h1 class="title">Directory Node Dashboard</h1>
 
         <article class="panel">
           <div class="panel-heading">
@@ -45,14 +45,14 @@
           <div class="column">
             <article class="panel">
               <div class="panel-heading has-text-centered">
-                Send Connections
+                Received Connections
               </div>
-              {{range .send}}
+              {{range .received}}
               <div class="block">
                 <div class="card">
                   <div class="card-content">
                     <div class="content has-text-centered">
-                      {{.From}} -> {{.To}}
+                      {{.Address}} <- {{.Success}}
                     </div>
                   </div>
                 </div>
@@ -64,14 +64,14 @@
           <div class="column">
             <article class="panel">
               <div class="panel-heading has-text-centered">
-                Received Connections
+                Send Connections
               </div>
-              {{range .received}}
+              {{range .send}}
               <div class="block">
                 <div class="card">
                   <div class="card-content">
                     <div class="content has-text-centered">
-                      {{.From}} -> {{.To}}
+                      {{.Address}} -> {{.Success}}
                     </div>
                   </div>
                 </div>

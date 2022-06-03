@@ -2,7 +2,6 @@ package main
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,7 +20,6 @@ func postSend(c *gin.Context) {
 		return
 	}
 
-	newConnection.Time = time.Now()
 	connectionsSend = append(connectionsSend, newConnection)
 	c.IndentedJSON(http.StatusCreated, newConnection)
 }

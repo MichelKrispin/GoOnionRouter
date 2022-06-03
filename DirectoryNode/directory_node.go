@@ -2,7 +2,9 @@ package main
 
 import (
 	"net/http"
+	"time"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -13,6 +15,17 @@ var connectionsSend []connection
 
 func main() {
 	router := gin.Default()
+
+	// Allow CORS
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"*"},
+		AllowMethods:     []string{"PUT", "GET"},
+		AllowHeaders:     []string{"Origin"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+		MaxAge:           12 * time.Hour,
+	}))
+
 	router.LoadHTMLGlob("templates/*")
 
 	router.GET("/", func(c *gin.Context) {
@@ -34,6 +47,28 @@ func main() {
 				"nodes": routes,
 			})
 		}
+	})
+
+	router.GET("/update", func(c *gin.Context) {
+		count := 0
+		for {
+			if len(connectionsReceived) >= 3 && len(connectionsSend) == 3 {
+				break
+			}
+			if count > 100 {
+				c.IndentedJSON(http.StatusBadRequest, gin.H{
+					"error": "Timeout",
+				})
+				return
+			}
+			count++
+			time.Sleep(5 * time.Millisecond)
+		}
+		c.IndentedJSON(http.StatusOK, gin.H{
+			"receive": connectionsReceived,
+			"send":    connectionsSend,
+		})
+
 	})
 
 	router.POST("/register", postRegister)

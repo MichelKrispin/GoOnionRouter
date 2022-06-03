@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -50,11 +51,11 @@ func notifyRegister(thisNodesPort string) {
 	}
 }
 
-func notifySend(thisNode string, receiver string) {
+func notifySend(thisNode string, success bool) {
 	resp, err := http.Post(
 		"http://127.0.0.1:8888/send",
 		"application/json",
-		strings.NewReader("{\"from\": \""+thisNode+"\", \"to\": \""+receiver+"\"}"),
+		strings.NewReader("{\"address\": \""+thisNode+"\", \"success\": "+strconv.FormatBool(success)+"}"),
 	)
 	if err != nil {
 		log.Println("Sending error:", err)
@@ -64,20 +65,20 @@ func notifySend(thisNode string, receiver string) {
 		log.Println("[Failed] Notify (send) to directory node:",
 			getBody(resp),
 			"\nThis node:", thisNode,
-			", Receiver:", receiver,
+			", Success:", success,
 		)
 	} else {
 		log.Println("Notified (send)    [\033[97;44m" +
-			thisNode + "\033[0m -> " + receiver +
+			thisNode + "\033[0m -> Success: " + strconv.FormatBool(success) +
 			"]")
 	}
 }
 
-func notifyReceive(sender string, thisNode string) {
+func notifyReceive(thisNode string, success bool) {
 	resp, err := http.Post(
 		"http://127.0.0.1:8888/receive",
 		"application/json",
-		strings.NewReader("{\"from\": \""+thisNode+"\", \"to\": \""+sender+"\"}"),
+		strings.NewReader("{\"address\": \""+thisNode+"\", \"success\": "+strconv.FormatBool(success)+"}"),
 	)
 	if err != nil {
 		log.Println("Sending error:", err)
@@ -87,11 +88,10 @@ func notifyReceive(sender string, thisNode string) {
 		log.Println("[Failed] Notify (receive) to directory node:",
 			getBody(resp),
 			"\nThis node:", thisNode,
-			", Sender:", sender,
+			", Success:", success,
 		)
 	} else {
-		log.Println("Notified (receive) [" +
-			sender + " -> \033[97;44m" + thisNode +
-			"\033[0m]")
+		log.Println("Notified (receive) [\033[97;44m" +
+			thisNode + "\033[0m <- Success: " + strconv.FormatBool(success) + "]")
 	}
 }

@@ -60,17 +60,30 @@
   <script src="assets/two.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
   <script>
+    let route;
     $('#connect-to-service').click(function () {
-      console.log('Clicked');
-      /*
       $.ajax({
-        type: "GET",
-        url: "/update",
+        type: 'GET',
+        url: '/connect',
         success: function (data) {
-          alert("Received numbers: " + data["numbers"]);
+          console.log('Received data is ', JSON.stringify(data));
+          route = data['route'];
         },
       });
-      */
+      $.ajax({
+        type: 'GET',
+        url: 'http://127.0.0.1:8888/update',
+        crossDomain: true,
+        success: function (data) {
+          console.log(JSON.stringify(data));
+          animateRouter(route);
+        },
+        error: function (responseData) {
+          const error = JSON.parse(responseData.responseText).error;
+          console.warn(error);
+          alert(`Error: ${error}`);
+        },
+      });
     });
   </script>
 

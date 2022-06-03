@@ -11,7 +11,7 @@ func nodesContain(nodes []node, newNode string) bool {
 
 func isRegistered(nodes []node, newConnection connection) bool {
 	for _, node := range nodes {
-		if node.Address == newConnection.From || node.Address == newConnection.To {
+		if node.Address == newConnection.Address {
 			return true
 		}
 	}

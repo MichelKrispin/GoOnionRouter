@@ -1,11 +1,8 @@
 package main
 
-import "time"
-
 type connection struct {
-	From string    `json:"from" binding:"required"`
-	To   string    `json:"to" binding:"required"`
-	Time time.Time `json:"time"`
+	Address string `json:"address" binding:"required"`
+	Success bool   `json:"success" binding:"required"`
 }
 
 type node struct {
