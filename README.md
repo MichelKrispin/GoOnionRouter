@@ -26,9 +26,9 @@ This is my first Go project so there are highly likely unidiomatic or inefficien
 
 ## Protocol
 
-A custom, very simple protocl is used between the nodes and the client to wrap up a request.
+A custom, very simple protocol is used between the nodes and the client to wrap up a request.
 
 ```text
 size of address | size of content | Encrypted 256 AES key | address | content
-    4 bytes     |    4 bytes	  |     512 bytes         |   ...   |  ...
+    4 bytes     |    4 bytes	    |     512 bytes         |   ...   |  ...
 ```
