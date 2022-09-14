@@ -30,5 +30,5 @@ A custom, very simple protocol is used between the nodes and the client to wrap 
 
 ```text
 size of address | size of content | Encrypted 256 AES key | address | content
-    4 bytes     |    4 bytes	    |     512 bytes         |   ...   |  ...
+    4 bytes     |    4 bytes	  |     512 bytes         |   ...   |  ...
 ```
